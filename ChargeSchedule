@@ -1,0 +1,82 @@
+package com.chargePoint;
+
+import java.util.*;
+
+public class ChargeSchedule {
+
+    int startTime;
+    int endTime;
+
+    public ChargeSchedule (int startTime, int endTime) {
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
+
+    public  Map<Integer, List<Integer>> scheduleCharging(Car[] cars, Charger[] chargers) {
+        if(cars.length==0 || chargers.length==0){
+            return new HashMap<>();
+        }
+        Arrays.sort(cars, (a,b)-> Integer.compare(b.currentCharge, a.currentCharge));
+        Arrays.sort(chargers, (a,b)-> Integer.compare(b.chargingPower, a.chargingPower));
+
+        HashMap<Integer, List<Integer>> carSchedule = new HashMap<>();
+        // Using array- {chargerId, chargingPower, availableTime} for simplicity to store the available time .
+        // Alternate option is to add the availableTime field to the Charger class and update it or create a new class to support the charger state.
+        PriorityQueue<int[]> chargerQueue = new PriorityQueue<>(
+                (a,b)->a[2]==b[2]?b[1]-a[1]:a[2]-b[2]); // Sorting first by early available time, then by better charging power
+
+        for (Charger charger : chargers) {
+            chargerQueue.offer(new int[]{charger.id, charger.chargingPower, 0});
+        }
+
+        int i = 0;
+        while(i<cars.length && !chargerQueue.isEmpty() &&chargerQueue.peek()[2]<endTime){
+            Car car = cars[i];
+            if(car.currentCharge>=100){
+                i++;
+                continue;
+            }
+            int[] earliestAvailableCharger = chargerQueue.poll();
+
+            //  ((100 - currentCharge) * capacity / chargingPower) * 3600 for duration in seconds
+            double chargeNeeded = (100 - car.currentCharge)* 0.01 * car.capacity;
+            int chargingDuration = (int) (( chargeNeeded / earliestAvailableCharger[1]) * 3600);
+            int endChargingTime = earliestAvailableCharger[2] + chargingDuration;
+            if(endChargingTime>endTime){
+                i++;
+                chargerQueue.offer(earliestAvailableCharger);
+                continue;
+            }
+            chargerQueue.offer(new int[]{earliestAvailableCharger[0], earliestAvailableCharger[1], endChargingTime});
+            carSchedule.computeIfAbsent(earliestAvailableCharger[0], k -> new ArrayList<>()).add(car.id);
+            i++;
+        }
+        return carSchedule;
+
+    }
+
+
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+        Car car1 = new Car(1, 80, 90);
+        Car car2 = new Car(2, 40, 40);
+        Car car3 = new Car(3, 120, 60);
+        Car car4 = new Car(4, 80, 55);
+        Car car5 = new Car(5, 80, 100);
+        Car car6 = new Car(6, 80, 20);
+        Car[] cars = new Car[]{car1, car2, car3, car4, car5, car6};
+
+        Charger cahrger1 = new Charger(1, 30);
+        Charger cahrger2 = new Charger(2, 60);
+        Charger cahrger3 = new Charger(3, 30);
+        Charger[] chargers = new Charger[]{cahrger1, cahrger2, cahrger3};
+
+        int startTime = 0;
+        int endTime = 12*60*60; // Assumption made for 12 hours of charging per day in seconds, can be parameterized as needed.
+        ChargeSchedule scheduler = new ChargeSchedule(startTime, endTime);
+        System.out.println(scheduler.scheduleCharging(cars, chargers));
+    }
+
+
+}
