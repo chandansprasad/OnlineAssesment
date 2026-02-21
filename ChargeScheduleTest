@@ -1,0 +1,133 @@
+package test;
+
+import com.chargePoint.Car;
+import com.chargePoint.ChargeSchedule;
+import com.chargePoint.Charger;
+
+import java.util.List;
+import java.util.Map;
+
+/*
+* Assumptions or Constraints made in test cases:
+* - charge cannot be greater than 100
+* - charge capacity , charging power are greater than 0.
+* - starttime and endtime are in seconds which can accommodate for more than 24 hours and are assigned to int.
+*
+* */
+
+
+public class ChargeScheduleTest {
+  public static void main(String[] args) {
+
+
+    //original test case with one car fully charged
+      runTestCase(
+        "Test Case 1",
+        new ChargeSchedule(0, 12*60*60),
+        new Car[] {
+          new Car(1, 80, 90),
+          new Car(2, 40, 40),
+          new Car(3, 120, 60),
+          new Car(4, 80, 55),
+          new Car(5, 80, 20),
+          new Car(6, 80, 100)
+        },
+        new Charger[] {
+          new Charger(1, 30),
+          new Charger(2, 60),
+          new Charger(3, 30)
+        });
+
+      //test case with one or more car not charged due to time constraint
+      runTestCase(
+              "Test Case 2: Time constraint",
+              new ChargeSchedule(0, 5000),
+              new Car[] {
+                      new Car(1, 80, 90),
+                      new Car(2, 40, 40),
+                      new Car(3, 120, 60),
+                      new Car(4, 80, 55),
+                      new Car(5, 80, 20),
+                      new Car(6, 80, 100)
+              },
+              new Charger[] {
+                      new Charger(1, 30),
+                      new Charger(2, 60),
+                      new Charger(3, 30)
+              });
+
+      runTestCase(
+              "Test Case 3: Time constraint with some time left",
+              new ChargeSchedule(0, 3000),
+              new Car[] {
+                      new Car(1, 100, 50),
+                      new Car(2, 100, 80),
+                      new Car(3, 100, 20),
+                      new Car(4, 100, 90)
+              },
+              new Charger[] {
+                      new Charger(1, 100),
+                      new Charger(2, 100)
+              });
+
+      //test case with car at 0 charge
+      runTestCase(
+              "Test Case 4:  0 charge",
+              new ChargeSchedule(0, 12*60*60),
+              new Car[] {
+                      new Car(1, 80, 90),
+                      new Car(2, 40, 40),
+                      new Car(3, 120, 60),
+                      new Car(4, 80, 55),
+                      new Car(5, 80, 0),
+                      new Car(6, 80, 100)
+              },
+              new Charger[] {
+                      new Charger(1, 30),
+                      new Charger(2, 60),
+                      new Charger(3, 30)
+              });
+
+
+    //no cars
+      runTestCase(
+              "Test Case 1", new ChargeSchedule(0, 12*60*60),
+              new Car[] {},
+              new Charger[] {
+                      new Charger(1, 30),
+                      new Charger(2, 60),
+                      new Charger(3, 30)
+              });
+
+      //no chargers
+      runTestCase(
+              "Test Case 2", new ChargeSchedule(0, 12*60*60),
+              new Car[] {
+                      new Car(1, 80, 90),
+                      new Car(2, 40, 40),
+                      new Car(3, 120, 60),
+                      new Car(4, 80, 55),
+                      new Car(5, 80, 20)
+              },
+              new Charger[] {});
+
+
+
+  }
+
+  private static void runTestCase(String testCase, ChargeSchedule schedule, Car[] cars, Charger[] chargers) {
+    System.out.println(testCase);
+    System.out.println("");
+    try {
+      Map<Integer, List<Integer>> result = schedule.scheduleCharging(cars, chargers);
+      System.out.println("Result: " + result);
+    } catch (Exception e) {
+        System.out.println("Test Case: " + testCase + "Failed");
+        System.out.println("Exception thrown: " +  e.getMessage());
+    }
+    System.out.println("-----------------------------");
+  }
+}
+
+
+
